@@ -50,18 +50,17 @@ def funm(A: ArrayLike, func: Callable[[Array], Array],
 
   Args:
     A: array of shape ``(N, N)`` for which the function is to be computed.
-    func: Callable object that takes a scalar argument and returns a scalar result.
-      Represents the function to be evaluated over the eigenvalues of A.
+    func: Callable object that represents the function to be evaluated over the
+      eigenvalues of ``A``. It is called with a 1D array of all the eigenvalues and
+      must return an array of the same shape, i.e. it must be vectorized.
     disp: If true (default), error information is not returned. Unlike scipy's version JAX
       does not attempt to display information at runtime.
-    compute_expm: (N, N) array_like or None, optional.
-      If provided, the matrix exponential of A. This is used for improving efficiency when `func`
-      is the exponential function. If not provided, it is computed internally.
-      Defaults to None.
 
   Returns:
-    Array of same shape as ``A``, containing the result of ``func`` evaluated on the
-    eigenvalues of ``A``.
+    If ``disp`` is true (default), an array of the same shape as ``A``, containing the
+    result of ``func`` evaluated on the eigenvalues of ``A``. If ``disp`` is false, a
+    tuple ``(F, err)`` where ``F`` is that array and ``err`` is a real scalar array
+    holding an estimate of the error in ``F``.
 
   Notes:
     The returned dtype of JAX's implementation may differ from that of scipy;
@@ -85,6 +84,12 @@ def funm(A: ArrayLike, func: Callable[[Array], Array],
     >>> expA_2 = jax.scipy.linalg.expm(A)
     >>> jnp.allclose(expA_1, expA_2, rtol=1E-4)
     Array(True, dtype=bool)
+
+    Passing ``disp=False`` also returns an estimate of the error:
+
+    >>> F, err = jax.scipy.linalg.funm(A, jnp.exp, disp=False)
+    >>> F.shape, err.shape
+    ((2, 2), ())
   """
   A_arr = jnp.asarray(A)
   if A_arr.ndim != 2 or A_arr.shape[0] != A_arr.shape[1]:
